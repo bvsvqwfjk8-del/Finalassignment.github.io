@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>懂车弟</title>
+    
+    <style>
+        /* === 全局重置 === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* 增加平滑滚动效果 */
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            line-height: 1.6;
+        }
+        a { text-decoration: none; color: inherit; transition: color 0.2s; }
+        a:hover { color: #FFCC32; }
+        ul { list-style: none; }
+
+        .container { width: 1280px; margin: 0 auto; }
+
+        /* === 顶部导航 === */
+        header {
+            height: 80px; border-bottom: 1px solid #f0f0f0;
+            display: flex; align-items: center; background: #fff;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-inner { display: flex; justify-content: space-between; align-items: center; width: 1280px; margin: 0 auto; }
+        .logo { font-size: 26px; font-weight: 800; letter-spacing: -1px; color: #000; }
+        .logo span { color: #FFCC32; }
+
+        /* 分类导航 */
+        .nav-links { display: flex; gap: 40px; font-weight: 500; font-size: 16px; color: #555; margin-left: 40px; flex: 1; }
+        .nav-links li.active a { color: #000; font-weight: 700; position: relative; }
+        .nav-links li.active a::after {
+            content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 3px; background: #FFCC32; border-radius: 2px;
+        }
+
+        /* 搜索与登录 */
+        .right-area { display: flex; align-items: center; gap: 20px; }
+        .search-box-wrapper { position: relative; }
+        .search-box-wrapper input {
+            width: 200px; height: 36px; padding: 0 35px 0 15px;
+            border: 1px solid #eee; border-radius: 18px; background-color: #f7f7f7;
+            outline: none; font-size: 14px; transition: all 0.3s;
+        }
+        .search-box-wrapper input:focus { width: 240px; background-color: #fff; border-color: #FFCC32; }
+        .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #999; cursor: pointer; }
+        
+        .auth-btns { display: flex; align-items: center; gap: 15px; font-size: 14px; }
+        .btn-login { color: #666; cursor: pointer; }
+        .btn-register { padding: 6px 18px; background-color: #FFCC32; color: #000; border-radius: 20px; font-weight: 500; cursor: pointer; }
+        .btn-register:hover { background-color: #f0be20; color: #000; }
+
+        /* === 轮播图区域 === */
+        .banner-wrap { margin-top: 30px; }
+        .banner-section {
+            height: 420px;
+            background-color: #f7f7f7;
+            border-radius: 16px;
+            position: relative; /* 必须：作为绝对定位图片的父容器 */
+            overflow: hidden;
+        }
+
+        /* 图片样式：绝对定位以实现重叠 */
+        .banner-img {
+            width: 100%; height: 100%; object-fit: cover;
+            position: absolute; top: 0; left: 0;
+            opacity: 0; /* 默认隐藏 */
+            transition: opacity 0.8s ease-in-out; /* 淡入淡出动画 */
+            background-color: #f0f0f0;
+        }
+        /* 激活状态：显示图片 */
+        .banner-img.active { opacity: 1; z-index: 1; }
+
+        /* 底部小圆点 */
+        .slider-dots {
+            position: absolute; bottom: 20px; right: 30px; z-index: 10;
+            display: flex; gap: 10px;
+        }
+        .dot {
+            width: 10px; height: 10px; background-color: rgba(255,255,255,0.6);
+            border-radius: 50%; cursor: pointer; transition: 0.3s;
+        }
+        .dot:hover, .dot.active { background-color: #FFCC32; transform: scale(1.2); }
+
+        /* === 工具分类栏 (纯文字版) === */
+        .tools-bar { 
+            padding: 30px 0; /* 调整间距 */
+            display: flex; 
+            justify-content: space-around; 
+            border-bottom: 1px solid #f9f9f9; 
+        }
+        .tool-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer; 
+            color: #444; 
+            font-size: 16px; 
+            font-weight: 500;
+            padding: 10px 25px; /* 增加点击区域 */
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .tool-item:hover { 
+            transform: translateY(-2px); 
+            background-color: #f5f5f5; /* 增加淡灰色背景悬停效果 */
+            color: #000;
+        }
+
+        /* === 内容区 === */
+        .main-layout { display: flex; justify-content: space-between; margin-top: 50px; margin-bottom: 80px; }
+        .content-left { width: 860px; }
+        .content-right { width: 380px; }
+
+        /* 为锚点跳转预留一点滚动偏移量 (可选，视header高度而定) */
+        .section-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
+            margin-bottom: 30px; 
+            scroll-margin-top: 100px; /* 确保跳转后不被header遮挡 */
+        }
+        .section-title { font-size: 24px; font-weight: 700; color: #222; }
+        .section-more { font-size: 14px; color: #999; }
+
+        /* 资讯列表 */
+        .news-item { display: flex; margin-bottom: 35px; cursor: pointer;}
+        .news-thumb {
+            width: 220px; height: 145px; background-color: #f5f5f5; border-radius: 8px;
+            margin-right: 25px; flex-shrink: 0; object-fit: cover; display: block;
+        }
+        .news-details { display: flex; flex-direction: column; justify-content: space-between; padding: 5px 0; flex: 1; }
+        .news-title { font-size: 20px; font-weight: 600; color: #222; line-height: 1.4; transition: color 0.2s; }
+        .news-item:hover .news-title { color: #FFCC32; }
+        .news-meta { font-size: 13px; color: #999; display: flex; align-items: center; gap: 15px; }
+        .tag { background: #fff8e1; color: #bfa025; padding: 2px 8px; border-radius: 4px; }
+
+        /* 排行榜 */
+        .rank-card { background: #fff; padding-left: 25px; border-left: 1px solid #f0f0f0; }
+        .rank-item { display: flex; align-items: center; margin-bottom: 25px; font-size: 16px; }
+        .rank-idx { font-weight: 800; font-style: italic; margin-right: 15px; color: #ddd; font-size: 20px; width: 25px; }
+        .rank-item:nth-child(1) .rank-idx, .rank-item:nth-child(2) .rank-idx, .rank-item:nth-child(3) .rank-idx { color: #FFCC32; }
+        .rank-title { flex: 1; color: #444; }
+        .rank-val { font-size: 13px; color: #999; }
+
+        /* Footer */
+        footer { border-top: 1px solid #f0f0f0; padding: 50px 0; text-align: center; color: #999; font-size: 13px; margin-top: 60px; }
+        .footer-info { text-align: left; line-height: 1.8; color: #999; }
+        .footer-main { display: flex; justify-content: center; align-items: center; gap: 20px; }
+        .footer-qrcode { width: 80px; height: 80px; background-color: #f0f0f0; display: block; }
+        .footer-links { margin-bottom: 20px; font-size: 14px; color: #666; }
+        .footer-links a { margin: 0 8px; color: #666; transition: color 0.2s; }
+        .footer-links a:hover { color: #FFCC32; }
+        .footer-links span { color: #ddd; }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部 -->
+    <header>
+        <div class="header-inner">
+            <div class="logo"><span>HHH</span>performance</div>
+            
+            <ul class="nav-links">
+                <li class="active"><a href="#">推荐</a></li>
+                <li><a href="new_car.html">新车</a></li>
+                <li><a href="#news-section">资讯</a></li>
+
+                <li><a href="personal.html">我的</a></li>
+            </ul>
+
+            <div class="right-area">
+                <div class="search-box-wrapper">
+                    <!-- 添加 ID 和事件 -->
+                    <input type="text" id="searchInput" placeholder="搜索车系、内容...">
+                    <span class="search-icon" onclick="doSearch()">🔍</span>
+                </div>
+                <div class="auth-btns">
+                    <a href="login.html" class="btn-login">登录</a>
+                    <a href="login.html" class="btn-register">注册</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 轮播图区域 (已更新支持多图) -->
+        <div class="banner-wrap">
+            <div class="banner-section" id="bannerSlider">
+                <!-- 图片 1 (默认显示) -->
+                <img src="/imag/轮播图1.jpg" alt="首页轮播图1" class="banner-img active">
+                <!-- 图片 2 -->
+                <img src="/imag/轮播图2.jpg" alt="首页轮播图2" class="banner-img">
+                <!-- 图片 3 -->
+                <img src="/imag/轮播图3.jpg" alt="首页轮播图3" class="banner-img">
+
+                <!-- 指示点 -->
+                <div class="slider-dots">
+                    <span class="dot active" onclick="switchSlide(0)"></span>
+                    <span class="dot" onclick="switchSlide(1)"></span>
+                    <span class="dot" onclick="switchSlide(2)"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 极简工具栏 (分类) - 纯文字 -->
+        <div class="tools-bar">
+            <div class="tool-item">
+                <span>销量排行</span>
+            </div>
+            <div class="tool-item">
+                <span>车型大全</span>
+            </div>
+            <div class="tool-item">
+                <span>新能源</span>
+            </div>
+            <div class="tool-item">
+                <span>降价优惠</span>
+            </div>
+            <div class="tool-item">
+                <span>摩托车</span>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="main-layout">
+            <div class="content-left">
+                <!-- 添加 id="news-section" 用于跳转 -->
+                <div class="section-header" id="news-section">
+                    <h2 class="section-title">精选资讯</h2>
+                    <a href="#" class="section-more">查看更多 ></a>
+                </div>
+
+                <div class="news-item">
+                    <img src="/imag/年轻人第一台车.jpg" alt="资讯图片1" class="news-thumb">
+                    <div class="news-details">
+                        <div class="news-title">实测新款轿跑：动力强劲，这才是年轻人的第一台车</div>
+                        <div class="news-meta"><span class="tag">原创</span><span>懂车帝实测 · 520评论</span></div>
+                    </div>
+                </div>
+
+                <div class="news-item">
+                    <img src="/imag/汽油.jpg" alt="资讯图片2" class="news-thumb">
+                    <div class="news-details">
+                        <div class="news-title">油价调整通知：今晚12点起，汽油价格将迎来下调</div>
+                        <div class="news-meta"><span>新闻速递 · 10分钟前</span></div>
+                    </div>
+                </div>
+
+                <div class="news-item">
+                    <img src="/imag/SUV.jpg" alt="资讯图片3" class="news-thumb">
+                    <div class="news-details">
+                        <div class="news-title">家用SUV大横评：空间、油耗、舒适性，谁是性价比之王？</div>
+                        <div class="news-meta"><span class="tag">深度</span><span>车圈大咖 · 1小时前</span></div>
+                    </div>
+                </div>
+
+                 <div class="news-item">
+                    <img src="/imag/概念车.jpg" alt="资讯图片4" class="news-thumb">
+                    <div class="news-details">
+                        <div class="news-title">这就是未来的设计？概念车图赏</div>
+                        <div class="news-meta"><span>设计美学 · 2小时前</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-right">
+                <div class="rank-card">
+                    <div class="section-header"><h2 class="section-title" style="font-size: 20px;">热门车系</h2></div>
+                    <div class="rank-item"><span class="rank-idx">1</span><span class="rank-title">M3 Touring</span><span class="rank-val">2.8万辆</span></div>
+                    <div class="rank-item"><span class="rank-idx">2</span><span class="rank-title">M2 Competition</span><span class="rank-val">2.4万辆</span></div>
+                    <div class="rank-item"><span class="rank-idx">3</span><span class="rank-title">X5M</span><span class="rank-val">2.1万辆</span></div>
+                    <div class="rank-item"><span class="rank-idx">4</span><span class="rank-title">M4 CS</span><span class="rank-val">1.9万辆</span></div>
+                    <div class="rank-item"><span class="rank-idx">5</span><span class="rank-title">G80 M2</span><span class="rank-val">1.8万辆</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-links">
+            <a href="#">站点地图</a><span>|</span>
+            <a href="#">侵权投诉</a><span>|</span>
+            <a href="#">我要反馈</a><span>|</span>
+            <a href="#">加入我们</a><span>|</span>
+            <a href="#">广告投放</a><span>|</span>
+            <a href="#">懂车指数</a>
+        </div>
+        <div class="footer-main">
+            <div class="footer-info">
+                <div>学号：25216950320</div>
+                <div>姓名：黄颖锋</div>
+            </div>
+            <img src="/imag/二维码.jpg" alt="二维码" class="footer-qrcode">
+        </div>
+    </footer>
+
+    <!-- JavaScript 轮播逻辑 -->
+    <script>
+        console.log("首页加载完成");
+        
+        // 搜索功能
+        function doSearch() {
+            const input = document.getElementById('searchInput');
+            const query = input.value.trim();
+            if (query) {
+                // 只要有输入就跳转到新车页面，这里模拟搜索结果跳转
+                window.location.href = 'new_car.html';
+            } else {
+                alert('请输入搜索内容');
+            }
+        }
+
+        // 绑定回车事件
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doSearch();
+            }
+        });
+
+        // 1. 获取元素
+        const slides = document.querySelectorAll('.banner-img');
+        const dots = document.querySelectorAll('.dot');
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+        let slideInterval;
+
+        // 2. 切换图片函数
+        function switchSlide(index) {
+            // 移除所有激活状态
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            // 激活目标图片
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+            
+            // 更新当前索引
+            currentSlide = index;
+        }
+
+        // 3. 自动播放下一张
+        function nextSlide() {
+            let nextIndex = (currentSlide + 1) % totalSlides;
+            switchSlide(nextIndex);
+        }
+
+        // 4. 启动定时器 (每3秒切换)
+        function startAutoPlay() {
+            slideInterval = setInterval(nextSlide, 3000);
+        }
+
+        // 5. 暂停定时器 (鼠标悬停时)
+        function stopAutoPlay() {
+            clearInterval(slideInterval);
+        }
+
+        // 初始化
+        startAutoPlay();
+
+        // 添加鼠标悬停事件
+        const bannerArea = document.getElementById('bannerSlider');
+        bannerArea.addEventListener('mouseenter', stopAutoPlay);
+        bannerArea.addEventListener('mouseleave', startAutoPlay);
+    </script>
+</body>
+</html>
